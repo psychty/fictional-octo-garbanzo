@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapping points</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css", type="text/css"/> <!-- You need to add the leaflet style sheet-->
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+
+    <h1>Simple background map</h1>
+
+    <h2>UK map</h2>
+    <p>The first map is UK countries. The background tiles may be sufficient to show UK and you might not want to show the purple lines on the map. All this is customisable in the app.js file.</p>
+    <div id="map_1_id"></div>
+    <p>Zooming is disabled on this map.</p>
+    <p>However, you can use the control in the top right corner to toggle the outlines off and on.</p>
+   
+    <h2>Ploting points</h2>
+    <p>The second map is zoomed in on CP towers, with the background tile set to the coloured tiles. Again customisable in app.js and I have annotated most parts.</p>
+
+    <div id='map_2_id'></div>   
+
+    <h2>Plotting thousands of points</h2>
+    <p>I re-read the postcode.io documentation, whilst it has bulk request, it has a limit of 100 values. So google api may be best</p>
+    <p>Whatever method of getting data together for plotting, this section shows cluster maps, density maps, as well as controls for changing layers.</p>
+    <p>I have used R to generate a set of around 30,000 points to plot, as well as randomly assigned age group. You may be able to do this random array in vanilla JS but I just stuck with what i know fast.</p>
+    <p>This next map shows adding each marker (a circle this time) by looping through the whole array and plotting a marker for every record. However, it is a hugely resource intensive process for the browser to do this and takes many seconds to load.</p>
+    <div id="map_3_id"></div>
+
+    <p>Another solution to adding all the markers at once is to convert the array to a geojson format which leaflet will handle much easier than plotting through the array. </p>
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> <!-- I am using this to load data and run maps only when data available -->
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script> <!-- You need to add the leaflet style sheet-->
+    <script src = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/'></script> <!-- This plug in is for marker clustering -->
+    <script src="app.js"></script>   
+
+ </body>
+ </html>   
