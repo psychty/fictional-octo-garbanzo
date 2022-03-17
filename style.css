@@ -16,19 +16,28 @@
     color: #4c4c4e;
   }
 
-  
-  /* You must specify at least height or width for maps to be rendered */
+ /* You must specify at least height or width for maps to be rendered */
 #map_1_id {
-    height: 50vh;
-    background-color: antiquewhite;
-  }
+  height: 50vh;
+  background-color: antiquewhite;
+ }
   
 #map_2_id {
-    height: 50vh;
-    background-color: antiquewhite;
-  }
+  height: 50vh;
+  background-color: antiquewhite;
+ }
 
 #map_3_id {
-   height: 50vh;
-   background-color: antiquewhite;
+  height: 50vh;
+  background-color: antiquewhite;
  }
+
+#map_4_id {
+  height: 50vh;
+  background-color: antiquewhite;
+}
+  
+#map_5_id {
+  height: 50vh;
+  background-color: antiquewhite;
+}

@@ -12,30 +12,31 @@ $.ajax({
 });
 
 // Load points data array, you could replace this with the results of your own lookup and data
-$.ajax({
-    url: "./random_points.json",
-    dataType: "json",
-    async: false,
-    success: function(data) {
-    Client_data = data;
-    console.log('Client data successfully loaded.')},
-    error: function (xhr) {
-      alert('Client data not loaded - ' + xhr.statusText);
-    },
-});
-
-// Load points data array, you could replace this with the results of your own lookup and data
+// ! Note - I have written code for plotting these (also commented out) below, which loops through each record. However, that is not very efficient so if you can possibly help it, use a geojson format in which all points can be plotted together. This is kept here in case we cannot parse json array to geojson
 // $.ajax({
-//   url: "./random_points.geojson",
-//   dataType: "json",
-//   async: false,
-//   success: function(data) {
-//   Client_data_geo = data;
-//   console.log('Client geo data successfully loaded.')},
-//   error: function (xhr) {
-//     alert('Client data not loaded - ' + xhr.statusText);
-//   },
+//     url: "./random_points.json",
+//     dataType: "json",
+//     async: false,
+//     success: function(data) {
+//     Client_data = data;
+//     console.log('Client data successfully loaded.')},
+//     error: function (xhr) {
+//       alert('Client data not loaded - ' + xhr.statusText);
+//     },
 // });
+
+// Load points data array as a geojson file, you could replace this with the results of your own lookup and data
+$.ajax({
+  url: "./random_points.geojson",
+  dataType: "json",
+  async: false,
+  success: function(data) {
+  Client_data_geo = data;
+  console.log('Client geo data successfully loaded.')},
+  error: function (xhr) {
+    alert('Client data not loaded - ' + xhr.statusText);
+  },
+});
 
  //  Load uk_boundary geojson file
 var uk_geojson = $.ajax({
@@ -76,7 +77,7 @@ var attribution =
 $.when(uk_geojson).done(function () {
 
   // Add the UK boundary polygons, with the uk_boundary_colour style to map_1 
-var uk_boundary = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour })
+var uk_boundary_1 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour })
 
 // ! Map one - UK only  
 // Create a leaflet map (L.map) in the element map_1_id
@@ -89,19 +90,9 @@ L.control.scale().addTo(map_1); // This adds a scale bar to the bottom left by d
 L.tileLayer(tileUrl_bw, { attribution })
  .addTo(map_1);
 
-// uk_boundary.addTo(map_1) // Note that this is the part that draws the polygons on the map itself
+uk_boundary_1.addTo(map_1) // Note that this is the part that draws the polygons on the map itself
  
-map_1.fitBounds(uk_boundary.getBounds()); // We use the uk_boundary polygons to zoom the map to the whole of the UK. This will happen regardless of whether we use addTo() to draw the polygons
-
-// create a control
-var baseMaps_map_1 = {
-  "Show UK boundary": uk_boundary
-};
-
-L.control
- .layers(null, baseMaps_map_1, { collapsed: false })
- .addTo(map_1);
-
+map_1.fitBounds(uk_boundary_1.getBounds()); // We use the uk_boundary polygons to zoom the map to the whole of the UK. This will happen regardless of whether we use addTo() to draw the polygons
 
 // ! Map two - CP Towers
 // Create a leaflet map (L.map) in the element map_1_id
@@ -114,8 +105,8 @@ L.control.scale().addTo(map_2);
 L.tileLayer(tileUrl_coloured, { attribution })
  .addTo(map_2);
 
-// UK boundary polygons are already defined so we can just add this to map_2 
-uk_boundary.addTo(map_2) // Note that this is the part that draws the polygons on the map itself
+var uk_boundary_2 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour })
+uk_boundary_2.addTo(map_2) // Note that this is the part that draws the polygons on the map itself
 
 // add a single marker for the Code Potato Offices 
 var cp_marker = L.marker([CP_data['result']['latitude'], CP_data['result']['longitude']])
@@ -142,34 +133,186 @@ L.control.scale().addTo(map_3);
 L.tileLayer(tileUrl_bw, { attribution })
  .addTo(map_3);
 
-// This loops through the dataframe and plots a marker for every record.
-for (var i = 0; i < Client_data.length; i++) {
-marker = new L.circleMarker([Client_data[i]['lat'], Client_data[i]['long']],
-     {
-     radius: 1,
-     color: '#000',
-     weight: .5,
-     fillColor: 'green',
-     fillOpacity: 1})
-   .addTo(map_3) 
-  }
+// This loops through the dataframe and plots a marker for every record. 
+// for (var i = 0; i < Client_data.length; i++) {
+// marker = new L.circleMarker([Client_data[i]['lat'], Client_data[i]['long']],
+//      {
+//      radius: 1,
+//      color: '#000',
+//      weight: .5,
+//      fillColor: 'green',
+//      fillOpacity: 1})
+//    .addTo(map_3) 
+//   }
 
-//  L.geoJSON(Client_data_geo).addTo(map_3);
+var uk_boundary_3 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour }).addTo(map_3)
 
-  var baseMaps_map_3 = {
-    "Show UK boundary": uk_boundary,
-    // "Show Client Geolocations": clients_array, 
+// These are styles for the markers
+var clientMarkerOptions = {
+  radius: .01,
+  color: '#000',
+  weight: .01,
+  fillColor: 'green',
+  fillOpacity: 1
+};
+
+// This plots the geojson file as circlemarkers
+var client_locations = L.geoJSON(Client_data_geo, {
+  pointToLayer: function (feature, latlng){
+    return L.circleMarker(latlng, clientMarkerOptions)
+  }})
+  .bindPopup(function (layer) {
+    return (
+      "Age group: <Strong>" +
+        layer.feature.properties.Age 
+      )
+    }) // add tooltip
+  // .addTo(map_3); // draw it on the map
+
+var baseMaps_map_3 = {
+  "Show UK boundary": uk_boundary_3,
+  "Show Client geolocations": client_locations, 
   };
 
-  L.control
-   .layers(null, baseMaps_map_3, { collapsed: false })
-   .addTo(map_3);
+L.control
+ .layers(null, baseMaps_map_3, { collapsed: false })
+ .addTo(map_3);
 
-// However, it is a hugely resource intensive process for the browser to do this and takes many seconds to load.
-
-map_3.fitBounds(uk_boundary.getBounds()); // In this case I have not added uk_boundary to map_3, I have just used it to set the zoom. 
+ map_3.fitBounds(uk_boundary_3.getBounds()); // In this case I have not added uk_boundary to map_3, I have just used it to set the zoom. 
 // You must set the zoom some way (either fitbounds, setview, setzoom etc) for the map to 
 
+// ! Map four - all the dots but by age 
+
+// Create a leaflet map (L.map) in the element map_4_id
+var map_4 = L.map("map_4_id");
+L.control.scale().addTo(map_4);
+
+// add the background and attribution to the map 
+// Note - we have used the tileUrl_bw, swap this for tileUrl_coloured to see what happens
+L.tileLayer(tileUrl_bw, { attribution })
+ .addTo(map_4);
+
+var uk_boundary_4 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour }).addTo(map_4)
+
+// This time we want to plot the dots but sbe able to turn off one of the age bands.
+// To do this we create a filter function that can be used when plotting the dots.
+
+function age_1864_Filter(feature) {
+  if (feature.properties.Age === '18-64 years') return true
+}
+
+// These are styles for the markers for 18-64 year olds
+var clientMarker_1864_Options = {
+  radius: 5,
+  color: '#000',
+  weight: .01,
+  fillColor: 'orange',
+  fillOpacity: 1
+};
+
+function age_65_plus_Filter(feature) {
+  if (feature.properties.Age === '65+ years') return true
+}
+
+// These are styles for the markers for 65+ year olds
+var clientMarker_65_plus_Options = {
+  radius: 5,
+  color: '#000',
+  weight: .01,
+  fillColor: 'purple',
+  fillOpacity: 1
+};
+
+// ! You could have used a single styles options and included an additional function to decide colour or radius etc. We'll do this on map 5.
+
+// This plots the geojson file as circlemarkers
+var client_1864_locations = L.geoJSON(Client_data_geo, {
+  filter: age_1864_Filter, 
+  pointToLayer: function (feature, latlng){
+    return L.circleMarker(latlng, clientMarker_1864_Options)
+  }})
+  .bindPopup(function (layer) {
+    return (
+      "Age group: <Strong>" +
+        layer.feature.properties.Age 
+      )
+    }) // add tooltip
+  // .addTo(map_4); // draw it on the map
+
+// This plots the geojson file as circlemarkers
+var client_65_plus_locations = L.geoJSON(Client_data_geo, {
+  filter: age_65_plus_Filter, 
+  pointToLayer: function (feature, latlng){
+    return L.circleMarker(latlng, clientMarker_65_plus_Options)
+  }})
+  .bindPopup(function (layer) {
+    return (
+      "Age group: <Strong>" +
+        layer.feature.properties.Age 
+      )
+    }) // add tooltip
+  // .addTo(map_4); // draw it on the map
+
+  var baseMaps_map_4 = {
+  "Show UK boundary": uk_boundary_4,
+  "Show clients aged 18-64 years": client_1864_locations, 
+  "Show clients aged 65+ years": client_65_plus_locations, 
+  };
+
+L.control
+ .layers(null, baseMaps_map_4, { collapsed: false })
+ .addTo(map_4);
+
+map_4.fitBounds(uk_boundary_4.getBounds()); // In this case I have not added uk_boundary to map_4, I have just used it to set the zoom. 
+// You must set the zoom some way (either fitbounds, setview, setzoom etc) for the map to 
+ 
+// ! Map five - all the dots clustered 
+// Create a leaflet map (L.map) in the element map_1_id
+var map_5 = L.map("map_5_id");
+L.control.scale().addTo(map_5);
+
+// add the background and attribution to the map 
+// Note - we have used the tileUrl_bw, swap this for tileUrl_coloured to see what happens
+L.tileLayer(tileUrl_bw, { attribution })
+ .addTo(map_5);
+
+var uk_boundary_5 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour }).addTo(map_5)
+
+// TODO
+// I realised that the only color function i use is d3, and i dont think we want to use an extra library for the sake of it. For now these are commented out
+// setAgeColour
+
+// These are styles for the markers
+var clientMarkerAgeOptions = {
+  radius: 5,
+  color: '#000',
+  weight: .01,
+  // fillColor: setAgeColour(Client_data_geo[i]['Age']),
+  fillColor: 'green',
+  fillOpacity: 1
+};
+
+var client_locations_clustered_group = L.markerClusterGroup();
+
+// This plots the geojson file as circlemarkers
+var client_locations_clustered = L.geoJSON(Client_data_geo, {
+  pointToLayer: function (feature, latlng){
+    return  client_locations_clustered_group.addLayer(L.circleMarker(latlng, clientMarkerAgeOptions))
+  }})
+  .addTo(map_5); // draw it on the map
+
+
+var baseMaps_map_5 = {
+  "Show UK boundary": uk_boundary_5,
+  "Show client geolocations": client_locations_clustered, 
+  };
+
+L.control
+ .layers(null, baseMaps_map_5, { collapsed: false })
+ .addTo(map_5);
+
+ map_5.fitBounds(uk_boundary_5.getBounds()); // In this case I have not added uk_boundary to map_3, I have just used it to set the zoom. 
+// You must set the zoom some way (either fitbounds, setview, setzoom etc) for the map to 
 
 });
 
