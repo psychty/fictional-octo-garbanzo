@@ -26,13 +26,13 @@
     <div id='map_2_id'></div>   
 
     <h2>Plotting thousands of points</h2>
-    <p>I re-read the postcode.io documentation, whilst it has bulk request, it has a limit of 100 values. So google api may be best</p>
     <p>Whatever method of getting data together for plotting, this section shows cluster maps, density maps, as well as controls for changing layers.</p>
     <p>I have used R to generate a set of around 30,000 points to plot, as well as randomly assigned age group. You may be able to do this random array in vanilla JS but I just stuck with what i know fast.</p>
     <p>There are a few ways to add multiple points. As a json array you add each marker (a circle this time) by looping through the whole array and plotting a marker for every record. However, it is a hugely resource intensive process for the browser to do this and takes many seconds to load. It is also more difficult to do other things such as group the markers together to enable toggling them in the top right control.</p>
     <p>Another solution to adding all the markers at once is to convert the array to a geojson format which leaflet will handle much easier than plotting through the array. The map below has these markers available but the are not drawn by default (so not lagging the page load). Instead, they are drawn when you click the 'show client geolocations' control box.</p>
     <div id="map_3_id"></div>
-    <p>My random sample of points has no clustering so they are spread out pretty uniformly. You would probably expect some non random clustering of real world clients.</p>
+    <p>I have recreated my dummy dataset with some weighting for more realistic client bases. In this run, 70% of randomly sampled points are in Englands major towns and cities, with the remainder split across the UK. </p>
+    <p>You would probably expect some non random clustering of real world clients and so this approach allows for some areas to be more densely covered.</p>
 
     <h2>Plotting thousands of points by age</h2>
     <p>Let's stick with all points for a second and show on the next map different formatting by attribute (Age).</p>
@@ -43,14 +43,15 @@
     <p>Finally, what you came for. Here all dots are plotted together (rather than being added as individual subsets).</p>
     <p>This time I have drawn the points rather that hiding them as it is much quicker to draw these.</p>
     <div id="map_5_id"></div>
-    <p>There are many options to add to the clustering which I'll add as soon as I can.</p>
-
-    <p>Next up, density heatmaps.</p>
+    <p>There are many options to add to the clustering.</p>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> <!-- I am using this to load data and run maps only when data available -->
     <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script> <!-- You need to add the leaflet style sheet-->
     <script src='https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js'></script> <!-- This plug in is for marker clustering -->
     <script src="app.js"></script>   
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.2/heatmap.min.js"></script> <!-- heatmap-->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script> --> -->
+   
 
  </body>
  </html>   

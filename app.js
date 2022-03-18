@@ -278,37 +278,60 @@ L.tileLayer(tileUrl_bw, { attribution })
 
 var uk_boundary_5 = L.geoJSON(uk_geojson.responseJSON, { style: uk_boundary_colour }).addTo(map_5)
 
-// TODO
-// I realised that the only color function i use is d3, and i dont think we want to use an extra library for the sake of it. For now these are commented out
-// setAgeColour
-
-// These are styles for the markers
-var clientMarkerAgeOptions = {
-  radius: 5,
+// These are styles for the markers on map 5 
+var clientMarkerOptions_map5 = {
+  radius: 3,
   color: '#000',
-  weight: .01,
-  // fillColor: setAgeColour(Client_data_geo[i]['Age']),
+  weight: .1,
   fillColor: 'green',
   fillOpacity: 1
 };
 
+// ! This plots the geojson file as circlemarkers
+var client_locations_map5 = L.geoJSON(Client_data_geo, {
+  pointToLayer: function (feature, latlng){
+    return L.circleMarker(latlng, clientMarkerOptions_map5)
+  }})
+  .bindPopup(function (layer) {
+    return (
+      "Age group: <Strong>" +
+        layer.feature.properties.Age 
+      )
+    }) // add tooltip
+  // .addTo(map_3); // draw it on the map
+
+// ! This plots the geojson file as clustered circlemarkers
 var client_locations_clustered_group = L.markerClusterGroup();
 
-// This plots the geojson file as circlemarkers
 var client_locations_clustered = L.geoJSON(Client_data_geo, {
   pointToLayer: function (feature, latlng){
-    return  client_locations_clustered_group.addLayer(L.circleMarker(latlng, clientMarkerAgeOptions))
+    return  client_locations_clustered_group.addLayer(L.circleMarker(latlng, clientMarkerOptions_map5))
   }})
   .addTo(map_5); // draw it on the map
 
+// ! Density plot using leaflet.heat
+// var cfg = {
+//   "radius": 40,
+//   "useLocalExtrema": true,
+//   valueField: 'price'
+// }
 
+// var heatmapLayer = new HeatmapOverlay(cfg)
+
+
+// Set up the control with a basemap (radio) as well as overlay options.
 var baseMaps_map_5 = {
-  "Show UK boundary": uk_boundary_5,
-  "Show client geolocations": client_locations_clustered, 
+  "Show clusters": client_locations_clustered, 
+  "Show all clients": client_locations_map5, 
   };
 
+var overlayMaps_map_5 = {
+  "Show UK boundary": uk_boundary_5,
+  };
+
+
 L.control
- .layers(null, baseMaps_map_5, { collapsed: false })
+ .layers(baseMaps_map_5, overlayMaps_map_5, { collapsed: false })
  .addTo(map_5);
 
  map_5.fitBounds(uk_boundary_5.getBounds()); // In this case I have not added uk_boundary to map_3, I have just used it to set the zoom. 
