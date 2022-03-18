@@ -310,19 +310,19 @@ var client_locations_clustered = L.geoJSON(Client_data_geo, {
   .addTo(map_5); // draw it on the map
 
 // ! Density plot using leaflet.heat
-// var cfg = {
-//   "radius": 40,
-//   "useLocalExtrema": true,
-//   valueField: 'price'
-// }
 
-// var heatmapLayer = new HeatmapOverlay(cfg)
+var heatMapPoints = [];
+Client_data_geo.features.forEach(function(feature) {
+  heatMapPoints.push([feature.geometry.coordinates[1], feature.geometry.coordinates[0], 1])
+})
 
+var clientheat_locations_map5 = L.heatLayer(heatMapPoints, {radius: 20, minOpacity: 0.2, gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}});
 
 // Set up the control with a basemap (radio) as well as overlay options.
 var baseMaps_map_5 = {
   "Show clusters": client_locations_clustered, 
-  "Show all clients": client_locations_map5, 
+  "Show all clients": client_locations_map5,
+  "Show density of client locations": clientheat_locations_map5 
   };
 
 var overlayMaps_map_5 = {
