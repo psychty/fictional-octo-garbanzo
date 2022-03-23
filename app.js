@@ -39,8 +39,18 @@ $.ajax({
 });
 
  //  Load uk_boundary geojson file
-var uk_geojson = $.ajax({
-  url: "https://opendata.arcgis.com/datasets/e05662741ac2452081eaf663dfea92e3_0.geojson",
+// var uk_geojson = $.ajax({
+//   url: "https://opendata.arcgis.com/datasets/e05662741ac2452081eaf663dfea92e3_0.geojson",
+//   dataType: "json",
+//   success: console.log("UK boundary data successfully loaded."),
+//   error: function (xhr) {
+//     alert(xhr.statusText);
+//   },
+// });
+
+ //  Load uk_boundary geojson file
+ var uk_geojson = $.ajax({
+  url: "./uk_regions_countries.geojson",
   dataType: "json",
   success: console.log("UK boundary data successfully loaded."),
   error: function (xhr) {
