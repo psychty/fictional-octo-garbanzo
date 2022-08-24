@@ -4,20 +4,59 @@ install.packages(setdiff(packages, rownames(installed.packages())))
 easypackages::libraries(packages)
 
 # Choose an area 
-# We take the string and use a function called st_read() to query the Open Geography Portal API
-portsmouth_boundaries_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2021_GB_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson') %>% 
-  filter(LAD21NM %in% c('Portsmouth')) # We also filter just for Portsmouth
 
-# At the moment the object is sf format (spatial features), but we need to turn it into a spatial polygons dataframe
-Ports_spdf <- as_Spatial(portsmouth_boundaries_sf, 
-                           IDs = portsmouth_boundaries_sf$LAD21NM)
+# We take the string and use a function called st_read() to query the Open Geography Portal API
+wsx_clipped_boundaries_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2021_GB_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson') %>% 
+  filter(LAD21NM %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) # We also filter just for West Sussex LTLAs
 
 leaflet() %>% 
   addTiles() %>% 
-  addPolygons(data = Ports_spdf)
+  addPolygons(data = wsx_clipped_boundaries_sf,
+              fill = NA,
+              weight = 3,
+              opacity = 1)
 
-# We need to get a bounding box to use in OSM extraction
-area_bb <- bbox(Ports_spdf)
+# As you can see, this is clipped to the coast line and you can see at least two rivers cutting into the county around Arundel, and Shoreham by Sea.
+
+# Instead, you can use full extent (of the realm) boundaries which exclude the coastline. These take a bit longer to download from Open Geography Portal as they are often a finer resolution
+wsx_full_extent_boundaries_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2021_GB_BFE/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json') %>% 
+  filter(LAD21NM %in% c('Adur', 'Arun', 'Chichester', 'Crawley', 'Horsham', 'Mid Sussex', 'Worthing')) # We also filter just for West Sussex LTLAs
+
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = wsx_full_extent_boundaries_sf,
+              fill = NA,
+              weight = 3,
+              opacity = 1)
+
+# This is better, but it does lose the clipping around Thorney Island and Chichester Harbour
+
+
+# We could try using a combination of both the full extent and clipped boundaries
+wsx_a <- wsx_clipped_boundaries_sf %>% 
+  filter(LAD21NM == 'Chichester')
+wsx_b <- wsx_full_extent_boundaries_sf %>% 
+  filter(LAD21NM != 'Chichester')
+
+wsx_boundaries_sf <- wsx_a %>% 
+  rbind(wsx_b)
+
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = wsx_boundaries_sf,
+              fill = NA,
+              weight = 3,
+              opacity = 1)
+
+# Perfect, this will help for presentation purposes.
+
+# We need to get a bounding box to use in OSM extraction. If you use base bbox() function it needs to be on a spatial polygons dataframe version
+
+# At the moment the object is sf format (spatial features), but we need to turn it into a spatial polygons dataframe to plot more easily with Leaflet
+wsx_spdf <- as_Spatial(wsx_boundaries_sf, 
+                       IDs = wsx_boundaries_sf$LAD21NM)
+
+area_bb <- bbox(wsx_spdf)
 
 # The main function is opq( ) which build the final query. We add our filter criteria with the add_osm_feature( ) function. In this first query we will look for cinemas. 
 
@@ -27,18 +66,23 @@ q1 <- area_bb %>%
   opq() %>% 
   add_osm_feature(key = 'amenity', 
                   value = 'cinema') %>% 
-  osmdata_sf() 
+  osmdata_sf() # converts the results into an sf object
 
 # At the moment the object is sf format (spatial features), but we need to turn it into a spatial points dataframe
-cinema_spdf <- as_Spatial(q1$osm_points, 
-                           IDs = q1$osm_points$osm_id) %>% 
-  filter(!is.na(name))
+# We also only want to keep the points that fall within the polygons (the bounding box is a square/rectangle shape and may include some points outside of the ares)
+cinema_spdf <- st_intersection(wsx_boundaries_sf, q1$osm_points) %>% 
+  as_Spatial() 
+
+# This is a bit messy as some data entries have 'name' filled in, and others do not, and for some cinemas, individual screens are including rather than the whole cinema. You may have to make some decisions on how to clean up the data.
+
+cinema_spdf@data %>% View()
 
 leaflet() %>% 
   addTiles() %>% 
-  addPolygons(data = Ports_spdf,
+  addPolygons(data = wsx_spdf,
               fill = NA,
-              weight = 1) %>%
+              weight = 2,
+              color = '#000000') %>%
   addCircleMarkers(data = cinema_spdf,
              fillColor = 'maroon',
              fillOpacity = 1,
@@ -55,8 +99,6 @@ leaflet() %>%
 # OSM
 available_features()
 
-
-available_tags(key)
 available_tags("amenity")
 
 # Lets look for gambling settings ####
@@ -76,17 +118,15 @@ q3 <- area_bb %>%
 all_shop_tags <- available_tags('shop')
 # all_shop_tags %>% View() 
 
-# At the moment the object is sf format (spatial features), but we need to turn it into a spatial points dataframe
-gambling_spdf <- as_Spatial(q2$osm_points, 
-                          IDs = q2$osm_points$osm_id) %>% 
-  filter(!is.na(name))
+gambling_spdf <- st_intersection(wsx_boundaries_sf, q2$osm_points) %>% 
+  as_Spatial() 
 
-betting_spdf <- as_Spatial(q3$osm_points,
-                           IDs = q3$osm_points$osm_id)
+betting_spdf <- st_intersection(wsx_boundaries_sf, q3$osm_points) %>% 
+  as_Spatial() 
 
 leaflet() %>% 
   addTiles() %>% 
-  addPolygons(data = Ports_spdf,
+  addPolygons(data = wsx_spdf,
               fill = NA,
               weight = 1) %>%
   addCircleMarkers(data = cinema_spdf,
