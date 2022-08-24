@@ -5,7 +5,7 @@ easypackages::libraries(packages)
 
 # Choose an area 
 # We take the string and use a function called st_read() to query the Open Geography Portal API
-portsmouth_boundaries_sf <- st_read(query) %>% 
+portsmouth_boundaries_sf <- st_read('https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2021_GB_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=geojson') %>% 
   filter(LAD21NM %in% c('Portsmouth')) # We also filter just for Portsmouth
 
 # At the moment the object is sf format (spatial features), but we need to turn it into a spatial polygons dataframe
