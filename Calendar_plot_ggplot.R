@@ -161,7 +161,7 @@ final_df_1 <- left_join(df_1, final_df, by = c("Month_year", "id")) %>%
                               NA)))))))), levels = c("none","1-4", "5-9", "10-19", "20-29", "30+", "data missing", "non date")))
 
 # This is the plot, faceted on Year and Month, I have supressed the axis titles and labels.
-# I have also ommited the 'non_date' value from the breaks = in the scale_fill_manual() line so that it does not show up in the legend. It will still be coloured appropriately on the plot
+# FIXME I have also ommited the 'non_date' value from the breaks = in the scale_fill_manual() line so that it does not show up in the legend. It will still be coloured appropriately on the plot
 
 bin_colours <- c('#feebe2','#fcc5c0','#fa9fb5','#f768a1','#c51b8a','#7a0177', "#8e8e8e", "#f9f9f9")
 
@@ -174,8 +174,9 @@ final_df_1 %>%
   facet_grid(Year ~ Month_name) +
   scale_x_discrete(expand = c(0,0.1)) +
   scale_fill_manual(values = bin_colours,
-                    breaks = levels(final_df_1$Bins),
-                    name = "Visits to site\nper day") +
+                    drop = FALSE,
+                    breaks = c('none','1-4','5-9','10-19','20-29','30+'),
+                    name = "Count\nper day") +
   labs(x = NULL, 
        y = NULL) +
   ph_cal_theme() +
